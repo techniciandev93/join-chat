@@ -137,7 +137,7 @@ venv.bak/
 
 # mkdocs documentation
 /site
-
+chat_history.txt
 # mypy
 .mypy_cache/
 .dmypy.json
