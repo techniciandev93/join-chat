@@ -5,7 +5,7 @@ from datetime import datetime
 import aiofiles
 
 
-async def save_message(history_file, message, buffer_size=1024):
+async def save_message(history_file, message, buffer_size=4096):
     timestamp = datetime.now().strftime("[%d.%m.%y %H:%M]")
     formatted_message = f"{timestamp} {message.decode()}"
     print(formatted_message)
@@ -16,28 +16,32 @@ async def save_message(history_file, message, buffer_size=1024):
 
 
 async def connect_to_chat(chat_host, chat_port, history_file_path, buffer_size=1024):
-    async with aiofiles.open(history_file_path, mode='w') as history_file:
-        try:
-            reader, writer = await asyncio.open_connection(chat_host, chat_port)
-            while not reader.at_eof():
-                try:
-                    message = await reader.read(buffer_size)
-                    await save_message(history_file, message)
-                except asyncio.IncompleteReadError:
-                    print('Connection closed unexpectedly.')
-                    break
-                except asyncio.CancelledError:
-                    print('Connection cancelled.')
-                    break
+    writer = None
+    while True:
+        async with aiofiles.open(history_file_path, mode='a') as history_file:
+            try:
+                reader, writer = await asyncio.open_connection(chat_host, chat_port)
+                while not reader.at_eof():
+                    try:
+                        message = await reader.read(buffer_size)
+                        await save_message(history_file, message)
+                    except asyncio.IncompleteReadError:
+                        print('Соединение неожиданно прервалось.')
+                        break
+                    except asyncio.CancelledError:
+                        print('Соединение отменено.')
+                        break
 
-        except BaseException as error:
-            print(f'BaseException occurred. Exiting. {error}')
-            raise
-
-        finally:
-            print('Close the connection')
-            writer.close()
-            await writer.wait_closed()
+            except Exception as error:
+                print(f'Произошло Exception {error}.\nПовторное подключение...')
+                await asyncio.sleep(5)
+                continue
+            finally:
+                if writer is not None:
+                    print('Соединение закрыто.')
+                    writer.close()
+                    await writer.wait_closed()
+                    break
 
 
 if __name__ == '__main__':
@@ -57,7 +61,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    chat_history_file_path = 'chat_history.txt'
     devman_chat_host = 'minechat.dvmn.org'
     devman_chat_port = 5000
     asyncio.run(connect_to_chat(args.host, args.port, args.history))
