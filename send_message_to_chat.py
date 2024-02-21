@@ -29,5 +29,5 @@ if __name__ == '__main__':
     devman_chat_port = 5050
     chat_message = 'hello world'
     name = 'Anon'
-    token = '172fbc6a-d0c7-11ee-aae7-0242ac110002'
+    token = ''
     asyncio.run(send_message(devman_chat_host, devman_chat_port, chat_message, token, name))
