@@ -67,6 +67,10 @@ async def authorise(host, port, token, buffer_size=1024):
 
 
 async def submit_message(host, port, message, token, buffer_size=1024):
+    if not token:
+        logger.info('Необходимо выполнить авторизацию перед отправкой сообщения.')
+        return
+
     reader, writer = await asyncio.open_connection(host, port)
     logger.debug(await reader.read(buffer_size))
     writer.write(f'{token}\n'.encode())
