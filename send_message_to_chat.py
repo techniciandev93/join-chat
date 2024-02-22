@@ -33,7 +33,7 @@ async def register(host, port, nickname, user_file_path, buffer_size=1024):
     await writer.drain()
 
     logger.debug(await reader.read(buffer_size))
-    writer.write(f'{nickname}\n'.encode())
+    writer.write(f'{nickname.strip()}\n'.encode())
     await writer.drain()
 
     chat_info = await reader.readline()
@@ -83,7 +83,7 @@ async def submit_message(host, port, message, token, buffer_size=1024):
 
         logger.debug(await reader.read(buffer_size))
 
-        writer.write(f'{message}\n\n'.encode())
+        writer.write(f'{message.strip()}\n\n'.encode())
         await writer.drain()
         logger.info('Сообщение отправлено.')
     writer.close()
@@ -100,7 +100,7 @@ if __name__ == '__main__':
     devman_chat_port = 5050
 
     nickname = 'vaiz'
-    chat_message = 'hello world'
+    chat_message = 'hello\nworld'
     user_file_path = 'user.json'
 
     account_hash = asyncio.run(register(devman_chat_host, devman_chat_port, nickname, user_file_path))
