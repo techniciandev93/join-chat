@@ -3,8 +3,6 @@ import json
 import logging
 import os
 
-from environs import Env
-
 
 logger = logging.getLogger('Logger send message to chat')
 
@@ -25,16 +23,16 @@ def check_user_info(file_path):
 async def register(host, port, nickname, user_file_path, buffer_size=1024):
     account_hash = check_user_info(user_file_path)
     if account_hash:
-        logger.info('Данные пользователя есть в файле')
+        logger.info(f'Данные пользователя есть в файле - {user_file_path}')
         return account_hash
 
     reader, writer = await asyncio.open_connection(host, port)
-    logger.info(await reader.read(buffer_size))
+    logger.debug(await reader.read(buffer_size))
 
     writer.write('\n'.encode())
     await writer.drain()
 
-    logger.info(await reader.read(buffer_size))
+    logger.debug(await reader.read(buffer_size))
     writer.write(f'{nickname}\n'.encode())
     await writer.drain()
 
@@ -50,35 +48,49 @@ async def register(host, port, nickname, user_file_path, buffer_size=1024):
     return account_hash
 
 
-async def send_message(host, port, message, token, buffer_size=1024):
+async def authorise(host, port, token, buffer_size=1024):
     reader, writer = await asyncio.open_connection(host, port)
-    logger.info(await reader.read(buffer_size))
+    logger.debug(await reader.read(buffer_size))
+
+    writer.write(f'{token}\n'.encode())
+    await writer.drain()
+
+    response = await reader.readline()
+    if json.loads(response) is None:
+        logger.info('Неизвестный токен. Проверьте его или зарегистрируйте заново.')
+        return False
+
+    writer.close()
+    await writer.wait_closed()
+    logger.info('Авторизация прошла успешно.')
+    return True
+
+
+async def submit_message(host, port, message, token, buffer_size=1024):
+    reader, writer = await asyncio.open_connection(host, port)
+    logger.debug(await reader.read(buffer_size))
     writer.write(f'{token}\n'.encode())
     await writer.drain()
 
     check_token = await reader.readline()
     if json.loads(check_token) is None:
         logger.info('Неизвестный токен. Проверьте его или зарегистрируйте заново.')
-        logger.info(await reader.read(buffer_size))
+        logger.debug(await reader.read(buffer_size))
     else:
-        logger.info(await reader.read(buffer_size))
+        logger.debug(await reader.read(buffer_size))
         writer.write(f'\n'.encode())
         await writer.drain()
 
-        logger.info(await reader.read(buffer_size))
+        logger.debug(await reader.read(buffer_size))
 
         writer.write(f'{message}\n\n'.encode())
         await writer.drain()
-
+        logger.info('Сообщение отправлено.')
     writer.close()
     await writer.wait_closed()
 
 
 if __name__ == '__main__':
-    env = Env()
-    env.read_env()
-    chat_token = env.str('CHAT_TOKEN')
-
     logging.basicConfig(
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
     )
@@ -92,4 +104,6 @@ if __name__ == '__main__':
     user_file_path = 'user.json'
 
     account_hash = asyncio.run(register(devman_chat_host, devman_chat_port, nickname, user_file_path))
-    asyncio.run(send_message(devman_chat_host, devman_chat_port, chat_message, account_hash))
+    check_authorise = asyncio.run(authorise(devman_chat_host, devman_chat_port, account_hash))
+    if check_authorise:
+        asyncio.run(submit_message(devman_chat_host, devman_chat_port, chat_message, account_hash))
