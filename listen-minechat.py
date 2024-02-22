@@ -1,14 +1,17 @@
 import argparse
 import asyncio
+import logging
 from datetime import datetime
 
 import aiofiles
+
+logger = logging.getLogger('Logger listen minechat')
 
 
 async def save_message(history_file, message, buffer_size=4096):
     timestamp = datetime.now().strftime("[%d.%m.%y %H:%M]")
     formatted_message = f"{timestamp} {message.decode()}"
-    print(formatted_message)
+    logger.info(formatted_message)
     await history_file.write(formatted_message)
     history_file_tell = await history_file.tell()
     if history_file_tell >= buffer_size:
@@ -26,19 +29,19 @@ async def connect_to_chat(chat_host, chat_port, history_file_path, buffer_size=1
                         message = await reader.read(buffer_size)
                         await save_message(history_file, message)
                     except asyncio.IncompleteReadError:
-                        print('Соединение неожиданно прервалось.')
+                        logger.info('Соединение неожиданно прервалось.')
                         break
                     except asyncio.CancelledError:
-                        print('Соединение отменено.')
+                        logger.info('Соединение отменено.')
                         break
 
             except Exception as error:
-                print(f'Произошло Exception {error}.\nПовторное подключение...')
+                logger.info(f'Произошло Exception {error}.\nПовторное подключение...')
                 await asyncio.sleep(5)
                 continue
             finally:
                 if writer is not None:
-                    print('Соединение закрыто.')
+                    logger.info('Соединение закрыто.')
                     writer.close()
                     await writer.wait_closed()
                     break
@@ -61,6 +64,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    devman_chat_host = 'minechat.dvmn.org'
-    devman_chat_port = 5000
+    logging.basicConfig(
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+    )
+    logger.setLevel(logging.INFO)
+
     asyncio.run(connect_to_chat(args.host, args.port, args.history))
