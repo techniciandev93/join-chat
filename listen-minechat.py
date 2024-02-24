@@ -29,14 +29,14 @@ async def connect_to_chat(chat_host, chat_port, history_file_path):
                         message = await reader.readline()
                         await save_message(history_file, message)
                     except asyncio.IncompleteReadError:
-                        logger.info('Соединение неожиданно прервалось.')
+                        logger.error('Соединение неожиданно прервалось.',  exc_info=True)
                         break
                     except asyncio.CancelledError:
-                        logger.info('Соединение отменено.')
+                        logger.error('Соединение отменено.', exc_info=True)
                         break
 
             except Exception as error:
-                logger.info(f'Произошло Exception {error}.\nПовторное подключение...')
+                logger.error(f'Произошло Exception {error}.\nПовторное подключение...',  exc_info=True)
                 await asyncio.sleep(5)
                 continue
             finally:
