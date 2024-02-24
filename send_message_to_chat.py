@@ -125,6 +125,15 @@ async def submit_message(host, port, message, token):
             await writer.wait_closed()
 
 
+async def send_message_main(host, port, nickname, message, token, user_file_path):
+    account_hash = token
+    if account_hash is None:
+        account_hash = await register(host, port, nickname, user_file_path)
+    check_authorise = await authorise(host, port, account_hash)
+    if check_authorise:
+        await submit_message(host, port, message, account_hash)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Этот скрипт отправляет сообщения в чат.')
     parser.add_argument('--host', type=str, help='Укажите --host адрес хоста. По умолчанию '
@@ -159,9 +168,4 @@ if __name__ == '__main__':
     if not args.message:
         parser.error('--message это обязательный аргумент cli')
 
-    account_hash = args.token
-    if account_hash is None:
-        account_hash = asyncio.run(register(args.host, args.port, args.nickname, args.user_file_path))
-    check_authorise = asyncio.run(authorise(args.host, args.port, account_hash))
-    if check_authorise:
-        asyncio.run(submit_message(args.host, args.port, args.message, account_hash))
+    asyncio.run(send_message_main(args.host, args.port, args.nickname, args.message, args.token, args.user_file_path))
