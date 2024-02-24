@@ -46,11 +46,11 @@ async def register(host, port, nickname, user_file_path):
         logger.info(f'Пользователь создан, данные записаны в файл - {user_file_path}')
 
     except asyncio.exceptions.TimeoutError as error:
-        logger.error(f'Тайм-аут при подключении к серверу: {error}')
+        logger.error(f'Тайм-аут при подключении к серверу: {error}', exc_info=True)
     except asyncio.exceptions.CancelledError:
-        logger.error('Подключение было отменено')
+        logger.error('Подключение было отменено', exc_info=True)
     except Exception as error:
-        logger.error(f'Ошибка при регистрации: {error}')
+        logger.error(f'Ошибка при регистрации: {error}', exc_info=True)
 
     finally:
         if writer is not None:
@@ -76,11 +76,11 @@ async def authorise(host, port, token):
         logger.info('Авторизация прошла успешно.')
         return True
     except asyncio.exceptions.TimeoutError as error:
-        logger.error(f'Тайм-аут при подключении к серверу: {error}')
+        logger.error(f'Тайм-аут при подключении к серверу: {error}', exc_info=True)
     except asyncio.exceptions.CancelledError:
-        logger.error('Подключение было отменено')
+        logger.error('Подключение было отменено', exc_info=True)
     except Exception as error:
-        logger.error(f'Ошибка при авторизации: {error}')
+        logger.error(f'Ошибка при авторизации: {error}', exc_info=True)
     finally:
         if writer is not None:
             writer.close()
@@ -114,11 +114,11 @@ async def submit_message(host, port, message, token):
             await writer.drain()
             logger.info('Сообщение отправлено.')
     except asyncio.exceptions.TimeoutError as error:
-        logger.error(f'Тайм-аут при подключении к серверу: {error}')
+        logger.error(f'Тайм-аут при подключении к серверу: {error}', exc_info=True)
     except asyncio.exceptions.CancelledError:
-        logger.error('Подключение было отменено')
+        logger.error('Подключение было отменено', exc_info=True)
     except Exception as error:
-        logger.error(f'Ошибка при отправке сообщения: {error}')
+        logger.error(f'Ошибка при отправке сообщения: {error}', exc_info=True)
     finally:
         if writer is not None:
             writer.close()
