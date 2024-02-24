@@ -1,2 +1,1 @@
 aiofiles==23.2.1
-environs==10.3.0

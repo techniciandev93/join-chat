@@ -18,7 +18,7 @@ async def save_message(history_file, message, buffer_size=4096):
         await history_file.flush()
 
 
-async def connect_to_chat(chat_host, chat_port, history_file_path, buffer_size=1024):
+async def connect_to_chat(chat_host, chat_port, history_file_path):
     writer = None
     while True:
         async with aiofiles.open(history_file_path, mode='a') as history_file:
@@ -26,7 +26,7 @@ async def connect_to_chat(chat_host, chat_port, history_file_path, buffer_size=1
                 reader, writer = await asyncio.open_connection(chat_host, chat_port)
                 while not reader.at_eof():
                     try:
-                        message = await reader.read(buffer_size)
+                        message = await reader.readline()
                         await save_message(history_file, message)
                     except asyncio.IncompleteReadError:
                         logger.info('Соединение неожиданно прервалось.')
