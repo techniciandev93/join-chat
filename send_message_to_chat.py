@@ -40,7 +40,7 @@ async def register(host, port, nickname, user_file_path):
         chat_info = await reader.readline()
         json.loads(chat_info.decode())
 
-        with open('user.json', mode='w', encoding='utf-8') as json_file:
+        with open(user_file_path, mode='w', encoding='utf-8') as json_file:
             json.dump(json.loads(chat_info.decode()), json_file)
 
         logger.info(f'Пользователь создан, данные записаны в файл - {user_file_path}')
